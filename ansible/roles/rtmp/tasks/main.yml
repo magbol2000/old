@@ -1,0 +1,5 @@
+- name: Install rtmp module
+  apt:
+    name: libnginx-mod-rtmp
+    state: present
+    update_cache: yes

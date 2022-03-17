@@ -1,0 +1,156 @@
+- name: "Install nginx extras"
+  apt:
+    name: nginx-extras
+    dpkg_options: force-confnew
+    state: present
+    update_cache: yes
+
+- name: "Replace nginx.conf"
+  copy:
+    src: nginx.conf
+    dest: /etc/nginx/nginx.conf
+    owner: root
+    group: root
+    mode: '0644'
+    backup: yes
+  register: nginx_conf
+
+- name: "Configure redis: copy redis.conf file into place, backing up the original if it differs from the copied version"
+  copy:
+    src: redis.conf
+    dest: /etc/redis/redis.conf
+    owner: redis
+    group: redis
+    mode: '0640'
+    backup: yes
+  register: redis_conf
+
+- name: "Configure redis: enable redis service and restart it if something has changed in its config files"
+  service:
+    name: redis-server
+    state: restarted
+    enabled: yes
+  when: redis_conf.changed
+
+- name: "Configure nginx: copy the nginx admin.monster.local file into the place"
+  copy:
+    src: nginx-admin.monster.local
+    dest: /etc/nginx/sites-available/admin.monster.local
+    owner: root
+    group: root
+    mode: '0644'
+    backup: yes
+  register: nginx_admin_monster_local
+
+- name: "Configure nginx: create a symbolic link to the /etc/nginx/sites-available/admin.monster.local file"
+  file:
+    src: /etc/nginx/sites-available/admin.monster.local
+    dest: /etc/nginx/sites-enabled/admin.monster.local
+    owner: root
+    group: root
+    state: link
+
+- name: "Configure nginx: copy the nginx api.monster.local file into the place"
+  copy:
+    src: nginx-api.monster.local
+    dest: /etc/nginx/sites-available/api.monster.local
+    owner: root
+    group: root
+    mode: '0644'
+    backup: yes
+  register: nginx_api_monster_local
+
+- name: "Configure nginx: create a symbolic link to the /etc/nginx/sites-available/api.monster.local file"
+  file:
+    src: /etc/nginx/sites-available/api.monster.local
+    dest: /etc/nginx/sites-enabled/api.monster.local
+    owner: root
+    group: root
+    state: link
+
+- name: "Configure nginx: copy the nginx public.monster.local file into the place"
+  copy:
+    src: nginx-public.monster.local
+    dest: /etc/nginx/sites-available/public.monster.local
+    owner: root
+    group: root
+    mode: '0644'
+    backup: yes
+  register: nginx_public_monster_local
+
+- name: "Configure nginx: create a symbolic link to the /etc/nginx/sites-available/public.monster.local file"
+  file:
+    src: /etc/nginx/sites-available/public.monster.local
+    dest: /etc/nginx/sites-enabled/public.monster.local
+    owner: root
+    group: root
+    state: link
+
+- name: "Configure nginx: enable nginx service and restart it if something has changed in its config files"
+  service:
+    name: nginx
+    state: restarted
+    enabled: yes
+  when: nginx_admin_monster_local.changed or nginx_api_monster_local.changed or nginx_public_monster_local.changed
+
+- name: "Configure chat server: copy systemd pm2-chat-server.service file into place, backing up the original if it differs from the copied version"
+  copy:
+    src: systemd-pm2-chat-server.service
+    dest: /etc/systemd/system/pm2-chat-server.service
+    owner: root
+    group: root
+    mode: '0644'
+    backup: yes
+
+- name: "Configure chat server: Create the /home/vagrant/monster/www/chat-server/dist directory if it does not exist"
+  file:
+    path: /home/vagrant/monster/www/chat-server/dist
+    state: directory
+    owner: vagrant
+    group: vagrant
+    mode: '0755'
+
+- name: "Configure chat server: enable pm2-chat-server service and start it"
+  service:
+    name: pm2-chat-server
+    state: stopped
+    enabled: yes
+
+- name: "Configure netplan: copy the netplan 01-netcfg.yaml file into the place"
+  copy:
+    src: netplan-01-netcfg.yaml
+    dest: /etc/netplan/01-netcfg.yaml
+    owner: root
+    group: root
+    mode: '0644'
+    backup: yes
+  register: netplan_01_netcfg_yaml
+
+- name: "Configure netplan: Execute the 'netplan apply' command"
+  shell: netplan apply
+  when: netplan_01_netcfg_yaml.changed
+
+- name: "Remove unnecessary  packages"
+  apt:
+    name:
+      - beanstalkd
+      - memcached
+      - postgresql
+      - php5.6-*
+      - php7.0-*
+      - php7.2-*
+      - php7.3-*
+      - apache2
+    state: absent
+
+- name: "Create .bash_aliases file so that ohmyzsh won't complain"
+  copy:
+    content: ""
+    dest: /home/vagrant/.bash_aliases
+    force: no
+
+- name: "Disable ohmyzsh to check the dirty files"
+  git_config:
+    name: oh-my-zsh.hide-dirty
+    value: "1"
+    scope: global

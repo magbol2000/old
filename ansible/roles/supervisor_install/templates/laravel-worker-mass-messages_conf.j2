@@ -1,0 +1,9 @@
+[program:laravel-worker-mass-messages]
+process_name=%(program_name)s_%(process_num)02d
+command=php {{working_dir}}/artisan queue:work --queue=local-mass-messages --timeout 86400
+autostart=true
+autorestart=true
+user=vagrant
+numprocs=1
+redirect_stderr=true
+stdout_logfile={{working_dir}}/storage/logs/laravel-worker-mass-messages.log

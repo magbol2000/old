@@ -1,0 +1,60 @@
+- name: Download phpunit
+  get_url:
+    owner: root
+    group: root
+    url: https://phar.phpunit.de/phpunit-9.1.5.phar
+    dest: /usr/local/bin/phpunit
+    mode: '0755'
+
+- name: Install PHP Redis module
+  apt:
+    name: php7.4-redis
+    state: present
+    update_cache: yes
+
+- name: Copy xdebug.ini file into place, backing up the original if it differs from the copied version
+  copy:
+    src: xdebug.ini
+    dest: /etc/php/7.4/mods-available/xdebug.ini
+    owner: root
+    group: root
+    mode: '0644'
+    backup: yes
+  register: xdebug_ini
+
+- name: Create 20-xdebug.ini dir symbolic link to the xdebug.ini file
+  file:
+    src: /etc/php/7.4/mods-available/xdebug.ini
+    dest: /etc/php/7.4/fpm/conf.d/20-xdebug.ini
+    owner: root
+    group: root
+    state: link
+
+- name: Copy www.conf file into place, backing up the original if it differs from the copied version
+  copy:
+    src: www.conf
+    dest: /etc/php/7.4/fpm/pool.d/www.conf
+    owner: root
+    group: root
+    mode: '0644'
+    backup: yes
+  register: www_conf
+
+- name: Restart the php7.4-fpm service if the xdebug.ini or www_conf file were changed
+  service:
+    name: php7.4-fpm
+    state: restarted
+    enabled: yes
+  when: xdebug_ini.changed or www_conf.changed
+
+- name: Restart the nginx service if the www_conf file was changed
+  service:
+    name: nginx
+    state: restarted
+    enabled: yes
+  when: www_conf.changed
+
+- name: Select PHP version
+  alternatives:
+    name: php
+    path: /usr/bin/php7.4

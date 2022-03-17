@@ -1,0 +1,9 @@
+[program:laravel-worker-emails]
+process_name=%(program_name)s_%(process_num)02d
+command=php {{working_dir}}/artisan queue:work --queue=local-emails --timeout 86400
+autostart=true
+autorestart=true
+user=vagrant
+numprocs=1
+redirect_stderr=true
+stdout_logfile={{working_dir}}/storage/logs/laravel-worker-emails.log

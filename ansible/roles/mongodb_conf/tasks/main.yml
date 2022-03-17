@@ -1,0 +1,49 @@
+- name: Install pymongo package
+  pip:
+    name: pymongo<4.0
+    state: present
+
+- name: Create mongodb root user
+  mongodb_user:
+    database: admin
+    user: monster
+    password: secret
+    roles:
+      - db: admin
+        role: root
+      - db: admin
+        role: userAdminAnyDatabase
+
+- name: Create mongodb monster user
+  mongodb_user:
+    database: monster
+    login_user: monster
+    login_password: secret
+    user: monster
+    password: secret
+    roles:
+      - db: monster
+        role: dbAdmin
+
+- name: Create mongodb monster_test user
+  mongodb_user:
+    database: monster_test
+    login_user: monster
+    login_password: secret
+    user: monster
+    password: secret
+    roles:
+      - db: monster_test
+        role: dbAdmin
+
+- name: Delete homestead user
+  mongodb_user:
+    database: admin
+    name: homestead
+    state: absent
+
+- name: Restart the mongod
+  service:
+    name: mongod
+    state: restarted
+    enabled: yes

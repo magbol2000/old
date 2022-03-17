@@ -1,0 +1,9 @@
+[program:content-verification-result-check-photo]
+process_name=%(program_name)s_%(process_num)02d
+command=php {{working_dir}}/artisan queue:work rabbitmq-databus --queue=monster-local-result-check-photo --timeout 86400
+autostart=true
+autorestart=true
+user=vagrant
+numprocs=1
+redirect_stderr=true
+stdout_logfile={{working_dir}}/storage/logs/content-verification-result-check-photo.log

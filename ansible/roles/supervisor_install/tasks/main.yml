@@ -1,0 +1,138 @@
+- name: Install supervisor package
+  apt:
+    name: supervisor
+    state: present
+    update_cache: yes
+
+- name: Check that the /var/www/monster/api-server/artisan exists
+  stat:
+    path: /var/www/monster/api-server/artisan
+  register: api_artisan_check
+
+- name: Set the working_dir variable - option#1
+  set_fact:
+    working_dir: /var/www/monster/api-server
+  when: api_artisan_check.stat.exists
+
+- name: Set the working_dir variable - option#2
+  set_fact:
+    working_dir: /home/vagrant/monster/www/api-server
+  when: not api_artisan_check.stat.exists
+
+- name: Check that the /var/www/monster/content-verification-service/artisan exists
+  stat:
+    path: /var/www/monster/content-verification-service/artisan
+  register: cvs_artisan_check
+
+- name: Set the working_dir_content_verification variable - option#1
+  set_fact:
+    working_dir_content_verification: /var/www/monster/content-verification-service
+  when: cvs_artisan_check.stat.exists
+
+- name: Set the working_dir_content_verification variable - option#2
+  set_fact:
+    working_dir_content_verification: /home/vagrant/monster/www/content-verification-service
+  when: not cvs_artisan_check.stat.exists
+
+- name: Create the laravel-worker-default.conf file from template
+  template:
+    src: laravel-worker-default_conf.j2
+    dest: /etc/supervisor/conf.d/laravel-worker-default.conf
+    owner: root
+    group: root
+    mode: 0644
+  register: laravel_worker_default_conf
+
+- name: Create the laravel-worker-emails.conf file from template
+  template:
+    src: laravel-worker-emails_conf.j2
+    dest: /etc/supervisor/conf.d/laravel-worker-emails.conf
+    owner: root
+    group: root
+    mode: 0644
+  register: laravel_worker_emails_conf
+
+- name: Create the laravel-worker-delayed.conf file from template
+  template:
+    src: laravel-worker-delayed_conf.j2
+    dest: /etc/supervisor/conf.d/laravel-worker-delayed.conf
+    owner: root
+    group: root
+    mode: 0644
+  register: laravel_worker_delayed_conf
+
+- name: Create the laravel-worker-mass-messages.conf file from template
+  template:
+    src: laravel-worker-mass-messages_conf.j2
+    dest: /etc/supervisor/conf.d/laravel-worker-mass-messages.conf
+    owner: root
+    group: root
+    mode: 0644
+  register: laravel_worker_mass_messages_conf
+
+- name: Create the laravel-worker-notifications.conf file from template
+  template:
+    src: laravel-worker-notifications_conf.j2
+    dest: /etc/supervisor/conf.d/laravel-worker-notifications.conf
+    owner: root
+    group: root
+    mode: 0644
+  register: laravel_worker_notifications_conf
+
+- name: Create the content-verification-result-check-photo.conf file from template
+  template:
+    src: content-verification-result-check-photo_conf.j2
+    dest: /etc/supervisor/conf.d/content-verification-result-check-photo.conf
+    owner: root
+    group: root
+    mode: 0644
+  register: content_verification_result_check_photo_conf
+
+- name: Create the content-verification-check-photo.conf file from template
+  template:
+    src: content-verification-check-photo_conf.j2
+    dest: /etc/supervisor/conf.d/content-verification-check-photo.conf
+    owner: root
+    group: root
+    mode: 0644
+  register: content_verification_check_photo_conf
+
+- name: Create the content-verification-result-check-document.conf file from template
+  template:
+    src: content-verification-result-check-document_conf.j2
+    dest: /etc/supervisor/conf.d/content-verification-result-check-document.conf
+    owner: root
+    group: root
+    mode: 0644
+  register: content_verification_result_check_document_conf
+
+- name: Create the content-verification-check-document.conf file from template
+  template:
+    src: content-verification-check-document_conf.j2
+    dest: /etc/supervisor/conf.d/content-verification-check-document.conf
+    owner: root
+    group: root
+    mode: 0644
+  register: content_verification_check_document_conf
+
+- name: Create the content-verification-result-check-personal.conf file from template
+  template:
+    src: content-verification-result-check-personal_conf.j2
+    dest: /etc/supervisor/conf.d/content-verification-result-check-personal.conf
+    owner: root
+    group: root
+    mode: 0644
+  register: content_verification_result_check_personal_conf
+
+- name: Create the content-verification-check-personal.conf file from template
+  template:
+    src: content-verification-check-personal_conf.j2
+    dest: /etc/supervisor/conf.d/content-verification-check-personal.conf
+    owner: root
+    group: root
+    mode: 0644
+  register: content_verification_check_personal_conf
+
+- name: Execute the "supervisorctl update" command
+  shell: supervisorctl update
+  when: laravel_worker_default_conf.changed or laravel_worker_emails_conf.changed or laravel_worker_delayed_conf.changed or laravel_worker_mass_messages_conf.changed or laravel_worker_notifications_conf.changed or content_verification_check_photo_conf.changed or content_verification_result_check_photo_conf.changed or content_verification_check_document_conf.changed or content_verification_result_check_document_conf.changed or content_verification_result_check_personal_conf or content_verification_check_personal_conf
