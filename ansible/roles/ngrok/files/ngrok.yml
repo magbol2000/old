@@ -1,8 +1,0 @@
-web_addr: 192.168.20.20:4040
-log_level: info
-log_format: logfmt
-log: /var/log/ngrok.log
-tunnels:
-  default:
-    proto: http
-    addr: "api.monster.local"

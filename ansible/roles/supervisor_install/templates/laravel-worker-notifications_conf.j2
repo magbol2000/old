@@ -1,9 +1,0 @@
-[program:laravel-worker-notifications]
-process_name=%(program_name)s_%(process_num)02d
-command=php {{working_dir}}/artisan queue:work --queue=local-notifications --timeout 86400
-autostart=true
-autorestart=true
-user=vagrant
-numprocs=1
-redirect_stderr=true
-stdout_logfile={{working_dir}}/storage/logs/laravel-worker-notifications.log

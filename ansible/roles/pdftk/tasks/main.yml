@@ -1,5 +1,0 @@
-- name: Install pdftk package
-  apt:
-    name: pdftk
-    state: present
-    update_cache: yes
